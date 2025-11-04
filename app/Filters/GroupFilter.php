@@ -6,53 +6,55 @@ use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
+/**
+ * Filter para verificar se o usuário pertence a um dos grupos necessários.
+ */
 class GroupFilter implements FilterInterface
 {
     /**
-     * Roda antes da página carregar, verificando a permissão do grupo.
+     * Verifica a permissão do usuário antes da execução do Controller.
+     *
+     * @param array|null $arguments A lista de grupos permitidos.
+     *
+     * @return ResponseInterface|void
      */
     public function before(RequestInterface $request, $arguments = null)
     {
-        $auth = service('auth');
-
-        // Se o usuário não estiver logado, redireciona para a tela de login.
-        if (! $auth->loggedIn()) {
-            return redirect()->to(config('Auth')->loginRoute);
+        // Se não estiver logado, redireciona para a tela de login.
+        if (! auth()->loggedIn()) {
+             return redirect()->to(config('Auth')->loginRoute);
         }
 
-        $user = $auth->user();
+        $user = auth()->user();
 
-        // 🛑 REFORÇO DE SEGURANÇA: Previne o erro "Call to a member function inGroup() on null"
-        // Este é um teste de fallback para problemas de timing/cache.
+        // Garante que o usuário logado foi carregado corretamente.
         if ($user === null) {
-             return redirect()->to(config('Auth')->loginRoute)->with('error', 'Sessão inválida. Por favor, faça login novamente.');
+            return redirect()->to(config('Auth')->loginRoute)->with('error', 'Sessão inválida. Faça login novamente.');
         }
 
-        // Verifica se os argumentos de grupo foram fornecidos.
-        if (empty($arguments) || empty($arguments[0])) {
-            return redirect()->to('/')->with('error', 'Erro de Configuração. Grupos não definidos.');
-        }
-
-        // Pega a lista de grupos permitidos da rota (ex: "admin,developer").
-        $allowedGroups = explode(',', $arguments[0]);
-
+        // Obtém os grupos permitidos da rota.
+        $allowedGroups = is_array($arguments) ? $arguments : [$arguments];
+        
         // Verifica se o usuário pertence a algum dos grupos permitidos.
         foreach ($allowedGroups as $group) {
-            // Checa o grupo usando a função nativa do Shield (inGroup).
-            if ($user->inGroup(trim($group))) {
-                return; // Acesso permitido. Para o filtro.
+            if ($user->inGroup($group)) {
+                return; // Acesso permitido
             }
         }
 
-        // Se a verificação falhar em todos os grupos, o acesso é negado.
-        return redirect()->to('/')->with('error', 'Acesso Negado. Você não tem permissão.');
+        // Redireciona se o usuário não tiver permissão.
+        return redirect()->to('/sys')->with('erro', 'Acesso negado. Você não tem permissão para acessar esta área.');
     }
 
     /**
-     * Roda depois da página carregar (não faz nada).
+     * Permite inspecionar ou modificar o objeto de resposta após a execução do Controller.
+     *
+     * @param array|null $arguments
+     *
+     * @return ResponseInterface|void
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
-        
+        //
     }
 }

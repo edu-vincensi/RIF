@@ -64,42 +64,96 @@ class WebhookController extends BaseController
             $mensagem = $mensagemModel
                 ->where('destinatario', $destinatario)
                 ->where('status', 1)
-                ->where('categoria', 0)
-                ->orderBy('id', 'DESC')
+                ->orderBy('data_envio', 'DESC')
                 ->first();
+            
+            if (!$mensagem) {
+                return;
+            }
 
-            //atualizar a tabela de mensagens para recebido
-            $mensagemModel->update($mensagem['id'], ['status' => 2]);
-
-            $refeicao = $refeicaoModel
-                ->where('aluno_id', $alunoMatricula)
-                ->orderBy('id', 'DESC')
-                ->first();
+            $categoria = $mensagem['categoria'];
 
             $mensagemRetorno = '';
-            $dadosAtualizacao = [
-                'data_confirmacao' => date('Y-m-d H:i:s') 
-            ];
 
-            if ($resposta === '1') {
+            $mensagemModel->update($mensagem['id'], ['status' => 2]); //Recebida
 
-                $refeicaoModel->update($refeicao['id'], ['status' => 1]);
+            //Quando a resposta é sobre solicitação
+            if ($categoria == 0) {
 
-                $dataRefeicao = $refeicao['data_refeicao'];
+                $refeicao = $refeicaoModel
+                    ->where('aluno_id', $alunoMatricula)
+                    ->orderBy('id', 'DESC')
+                    ->first();
 
-                $this->criarMensagemQrCode($alunoMatricula, $destinatario, $dataRefeicao); 
-                $mensagemRetorno = 'Refeição confirmada. Você receberá o QR Code em breve!';
+                $mensagemRetorno = '';
+                $dadosAtualizacao = [
+                    'data_confirmacao' => date('Y-m-d H:i:s') 
+                ];
 
-            } else if ($resposta === '2') {
-                $refeicaoModel->update($refeicao['id'], ['status' => 3]);
-                $mensagemRetorno = 'Refeição recusada.';
+                if ($resposta === '1') {
 
-            } else {
-                $mensagemRetorno = 'Resposta recebida, mas não reconhecida.';
+                    $refeicaoModel->update($refeicao['id'], ['status' => 1]);
+
+                    $dataRefeicao = $refeicao['data_refeicao'];
+
+                    $this->criarMensagemQrCode($alunoMatricula, $destinatario, $dataRefeicao); 
+                    $mensagemRetorno = 'Refeição confirmada. Você receberá o QR Code em breve!';
+
+                } else if ($resposta === '2') {
+                    $refeicaoModel->update($refeicao['id'], ['status' => 3]);
+                    $mensagemRetorno = 'Refeição recusada.';
+
+                } else {
+                    $mensagemRetorno = 'Resposta recebida, mas não reconhecida.';
+                }
+
+                $evolutionAPI->sendMessage($destinatario, $mensagemRetorno);
+                return;
+
+            } 
+            //Quando a mensagem é pra validar o telefone
+            elseif ($categoria == 2) {
+
+                $respostaLimpa = trim(str_replace(['(', ')', ' ', '-', '+'], '', $resposta));
+
+                if ($resposta === '1') {
+                    $alunoTelefoneModel
+                        ->where('telefone', $destinatario)
+                        ->where('aluno_id', $alunoMatricula)
+                        ->set(['status' => 'ativo'])
+                        ->update();
+
+                    $mensagemRetorno = 'Telefone validado e ativado com sucesso!';
+
+                } elseif ($resposta === '2') {
+
+                    $mensagemModel->insert([
+                        'destinatario' => $destinatario,
+                        'mensagem'     => "Por favor, informe o número de telefone que deseja cadastrar no seguinte formato (DD) 99999-9999.",
+                        'status'       => 0,
+                        'categoria'    => 2
+                    ]);
+
+                } elseif (preg_match('/^\d+$/', $respostaLimpa)) {
+                    $telefoneExistente = $alunoTelefoneModel
+                        ->where('telefone', $respostaLimpa)
+                        ->where('aluno_id', $alunoMatricula)
+                        ->first();
+
+                    if ($telefoneExistente) {
+                        $alunoTelefoneModel->update($telefoneExistente['id'], ['status' => 'ativo']);
+                        $mensagemRetorno = 'Telefone informado foi validado e ativado com sucesso!';
+                    } else {
+                        $mensagemRetorno = "O número informado não foi encontrado no seu cadastro do SUAP. Entre em contato com o DEPAE para mais informações.";
+                    }
+                } else {
+                    $mensagemRetorno = "Resposta recebida, mas não reconhecida.";
+                }
+                
             }
 
             $evolutionAPI->sendMessage($destinatario, $mensagemRetorno);
-            return;
+            
         }
         else{
             return;
@@ -118,7 +172,7 @@ class WebhookController extends BaseController
 
         $dadosMensagem = [
             'destinatario'  => $destinatario,
-            'mensagem'      => $mensagemCompleta, 
+            'mensagem'      => $mensagem, 
             'status'        => 0, 
             'categoria'     => 1, 
         ];

@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="<?php echo base_url("assets/vendors/jquery-toast-plugin/jquery.toast.min.css"); ?>">
     <link rel="stylesheet" href="<?php echo base_url("assets/css/custom.css"); ?>">
     <link rel="stylesheet" href="<?php echo base_url("assets/css/flatpickr.min.css"); ?>">
+    <link rel="stylesheet" href="<?php echo base_url("assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css"); ?>">
 
     <link rel="shortcut icon" href="<?php echo base_url("assets/images/logo-ifro-mini.png"); ?>" />
 
@@ -418,7 +419,11 @@
     <script src="<?php echo base_url("assets/vendors/jvectormap/jquery-jvectormap-world-mill-en.js"); ?>"></script>
     <script src="<?php echo base_url("assets/vendors/datatables.net/jquery.dataTables.js"); ?>"></script>
     <script src="<?php echo base_url("assets/vendors/datatables.net-bs4/dataTables.bootstrap4.js"); ?>"></script>
+    <script src="<?php echo base_url("assets/vendors/moment/moment.min.js"); ?>"></script>
+    <script src="<?php echo base_url("assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"); ?>"></script>
+    <script src="<?php echo base_url("assets/vendors/bootstrap-datepicker/datetime/bootstrap-datetimepicker.min.js"); ?>"></script>
 
+    <script src="<?php echo base_url("assets/js/formpickers.js"); ?>"></script>
     <script src="<?php echo base_url("assets/js/off-canvas.js"); ?>"></script>
     <script src="<?php echo base_url("assets/js/hoverable-collapse.js"); ?>"></script>
     <script src="<?php echo base_url("assets/js/misc.js"); ?>"></script>

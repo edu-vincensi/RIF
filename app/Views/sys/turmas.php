@@ -29,7 +29,22 @@
         <div class="card ">
             <div class="card-body">
                 <div class="mb-3">
-                    <h5 class="card-title mb-0">Filtros</h5>
+                    <h5 class="card-title">Filtros</h5>
+                    <div class="form-group row align-items-end">
+                        <div class="col-md-3">
+                            <label for="filtro-curso">Curso</label>
+                            <select id="filtro-curso" class="js-example-basic-single" style="width:100%">
+                                <option value="">--</option>
+                                <?php foreach($cursos as $curso): ?>
+                                    <option value="<?= esc($curso['nome']) ?>"><?= esc($curso['nome']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-1 d-grid">
+                            <button type="button" id="btn-filtrar-curso" class="btn btn-primary">Filtrar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -68,6 +83,9 @@
     const turmasData = <?= json_encode($turmas ?? []) ?>;
 
     $(document).ready(function() {
+
+        //ESSA PARTE APENAS RENDERIZA O MODELO DO CORONA
+        $('.js-example-basic-single').select2();
 
         const initTooltips = () => {
             $('[data-bs-toggle="tooltip"]').each(function() {
@@ -152,6 +170,17 @@
                 },
                 drawCallback: function() {
                     initTooltips();
+                }
+            });
+
+            $('#btn-filtrar-curso').on('click', function() {
+                const valorCurso = $('#filtro-curso').val();
+                const table = $('#tabela-turmas').DataTable();
+
+                if (valorCurso) {
+                    table.column(3).search('^' + valorCurso + '$', true, false).draw();
+                } else {
+                    table.column(3).search('').draw();
                 }
             });
         }

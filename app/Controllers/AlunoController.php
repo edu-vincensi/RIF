@@ -7,6 +7,7 @@ use App\Models\AlunoModel;
 use App\Models\AlunoEmailModel;
 use App\Models\AlunoTelefoneModel;
 use App\Models\TurmaModel;
+use App\Models\EnviarMensagensModel;
 use App\Libraries\EvolutionAPI;
 use Exception;
 use PhpOffice\PhpSpreadsheet\Reader\Xls;
@@ -84,12 +85,23 @@ class AlunoController extends BaseController
 
             // Coleta e insere os telefones
             $telefones = $post['telefone'] ?? [];
+            $primeiroTelefone = null;
+
             foreach ($telefones as $telefone) {
-                $telefoneData = ['aluno_id' => $alunoData['matricula'], 'telefone' => trim(str_replace(['(', ')', ' ', '-', '+'], '', $telefone)), 'status' => 'ativo'];
+                $telefoneData = ['aluno_id' => $alunoData['matricula'], 'telefone' => trim(str_replace(['(', ')', ' ', '-', '+'], '', $telefone)), 'status' => 'inativo'];
+
+                if ($primeiroTelefone === null && !empty($telefoneData['telefone'])) {
+                    $primeiroTelefone = $telefoneData['telefone'];
+                }
+
                 if (!$alunoTelefoneModel->insert($telefoneData)) {
                     $alunoModel->db->transRollback();
                     return $this->redirectToBaseRoute($alunoTelefoneModel->errors() ?? ['Erro ao inserir telefone.']);
                 }
+            }
+
+            if ($primeiroTelefone !== null) {
+                $this->criaMensagemValidacao($alunoData, $primeiroTelefone);
             }
 
             $alunoModel->db->transCommit();
@@ -251,21 +263,6 @@ class AlunoController extends BaseController
     }
 
     /**
-     * Função utilizada dentro do importProcess
-     */
-    public function enviarWhatsapp($destino, $mensagem){
-        $wpp = new EvolutionAPI();
-
-        try {
-            $wpp->sendMessage($destino, $mensagem);
-            echo "Mensagem enviada com sucesso!";
-        }
-        catch(\Exception $e){
-            echo "Erro ao enviar a mensagem: " . $e->getMessage();
-        } 
-    }
-
-    /**
      * @route POST /alunos/import
      */
     public function import()
@@ -402,7 +399,7 @@ class AlunoController extends BaseController
         $turmaModel = new TurmaModel();
         
         $testar_enviar_telefone = 0; // pra testar sem lotar de mensagem por enquanto
-        
+
         $insertedCount = 0;
         $errors = [];
 
@@ -454,24 +451,15 @@ class AlunoController extends BaseController
                     }
 
                     /**
-                     * Carrega os parâmetros pra função (Envio de Whatsapp)
-                     */
-                    if ($testar_enviar_telefone == 0) { // esse if é só pra testar sem enviar um monte
-
-                        $destino = "69992599048"; // pra não enviar pros telefones reais da planilha
-
-                        $nome = $alunoData['nome']; 
-
-                        $mensagem = "Prezado(a) {$nome},\n\n";
-                        $mensagem .= "Você foi cadastrado no Sistema de Refeições do IFRO e precisamos validar seu telefone para que possa receber os avisos.\nDigite uma das opções abaixo.\n\n";
-                        $mensagem .= "*1* - Quero receber os avisos por esse telefone.\n";
-                        $mensagem .= "*2* - Não quero receber os avisos por este telefone e sim informar outro.\n";
-
-                        $testar_enviar_telefone += 1;
-
-                        //$this->enviarWhatsapp($destino, $mensagem);
-
+                    * Carrega os parâmetros pra função (Envio de Whatsapp)
+                    */
+                    if ($destino !== null) { 
+                        if ($testar_enviar_telefone < 5) { 
+                            $this->criaMensagemValidacao($alunoData, $destino);
+                            $testar_enviar_telefone++;
+                        }
                     }
+                    
                 }
 
             } else {
@@ -500,6 +488,36 @@ class AlunoController extends BaseController
         }
         
         return redirect()->to($this->baseRoute);
+    }
+
+    protected function criaMensagemValidacao(array $alunoData, string $destino)
+    {
+        $destinoReal = $destino;
+        $destino = "69992809488"; //Próvisório 
+
+        $nome = $alunoData['nome'];
+
+        $mensagem = "Prezado(a) {$nome},\n\n";
+        $mensagem .= "Você foi cadastrado no Sistema de Refeições do IFRO e precisamos validar seu telefone para que possa receber os avisos.\nDigite uma das opções abaixo.\n\n";
+        $mensagem .= "*1* - Quero receber os avisos por esse telefone.\n";
+        $mensagem .= "*2* - Não quero receber os avisos por este telefone e sim informar outro.\n";
+
+        $enviaMensagensModel = new EnviarMensagensModel();
+
+        $dataMensagem = [
+            'destinatario' => $destino,
+            'mensagem'     => $mensagem,
+            'status'       => 0, 
+            'categoria'    => 2, 
+        ];
+
+        if ($enviaMensagensModel->insert($dataMensagem)) {
+            return true;
+        } else {
+            log_message('error', 'Erro ao inserir mensagem de validação para aluno ID ' . $alunoData['matricula'] . ': ' . implode(', ', $enviaMensagensModel->errors()));
+            return false;
+        }
+
     }
 
     // provisoriamente aqui 

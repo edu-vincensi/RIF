@@ -7,29 +7,31 @@
     <h2 class="card-title mb-0">Agendamento de Refeição</h2>
 </div>
 <div class="row">
-    <div class="col-md-3 grid-margin stretch-card">
-        <div class="card ">
-            <div class="card-body ">
+    <div class="col-12 col-xl-3 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
                 <div class="mb-3">
                     <h5 class="card-title mb-0">Ações</h5>
                 </div>
-                <div class="my-4 ">
-                    <button type="button" class="btn btn-primary btn-fw" data-bs-toggle="modal" data-bs-target="#modal-cadastrar-agendamento">
-                        <i class="fa fa-plus-circle btn-icon-prepend"></i>
-                        Novo Agendamento
-                    </button>
+                <div class="my-4">
+                    <span data-bs-toggle="tooltip" title="Cadastrar Agendamento">
+                        <button type="button" class="btn btn-primary btn-fw" data-bs-toggle="modal" data-bs-target="#modal-cadastrar-agendamento">
+                            <i class="fa fa-plus-circle btn-icon-prepend"></i>
+                            <span class="d-none d-md-inline ms-1">Novo Agendamento</span>
+                        </button>
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-9 grid-margin stretch-card">
+    <div class="col-12 col-xl-9 grid-margin stretch-card">
         <div class="card ">
             <div class="card-body">
                 <div class="mb-3">
                     <h5 class="card-title">Filtros</h5>
                     <div class="form-group row align-items-end">
-                      <div class="col">
+                      <div class="col-md-2">
                         <label>Turma</label>
                         <select id="filtro-turma" class="js-example-basic-single" style="width:100%">
                             <option value="">--</option>
@@ -38,7 +40,7 @@
                             <?php endforeach; ?>
                         </select>
                       </div>
-                      <div class="col">
+                      <div class="col-md-2">
                         <label>Status</label>
                         <select id="filtro-status" class="js-example-basic-single" style="width:100%">
                             <option value="">--</option>
@@ -48,7 +50,7 @@
                             <option value="Cancelada">Cancelada</option>
                         </select>
                       </div>
-                      <div class="col">
+                      <div class="col-md-2">
                         <label>Motivo</label>
                         <select id="filtro-motivo" class="js-example-basic-single" style="width:100%">
                             <option value="">--</option>
@@ -59,7 +61,15 @@
                             <option value="Visita Técnica">Visita Técnica</option>
                         </select>
                       </div>
-                      <div class="col">
+                      <div class="col-md-4">
+                        <label for="">Período:</label>
+                        <div id="datepicker-popup" class="input-group input-daterange d-flex align-items-center">
+                            <input type="text" class="form-control" style="background-color: black;"> 
+                            <div class="input-group-addon mx-4"> até </div>
+                            <input type="text" class="form-control" style="background-color: black;">
+                        </div>
+                      </div>
+                      <div class="col-md-2 text-start">
                         <button id="btn-filtrar" class="btn btn-primary">Filtrar</button>
                       </div>
                     </div>
@@ -73,24 +83,26 @@
     <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
-                <?php if (isset($agendamentos) && !empty($agendamentos)): ?>
-                    <table class="table mb-4" id="listagem-agendamentos">
-                        <thead>
-                            <tr>
-                                <th><strong>Aluno(a)<i class="mdi mdi-chevron-down"></i></strong></th>
-                                <th><strong>Turma<i class="mdi mdi-chevron-down"></i></strong></th>
-                                <th><strong>Data<i class="mdi mdi-chevron-down"></i></strong></th>
-                                <th><strong>Status<i class="mdi mdi-chevron-down"></i></strong></th>
-                                <th><strong>Motivo<i class="mdi mdi-chevron-down"></i></strong></th>
-                                <th style="text-align: center; width: 10%; min-width: 100px;"><strong>Ações</strong></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                <?php else: ?>
-                    <p>Nenhum agendamento encontrado no banco de dados.</p>
-                <?php endif; ?>
+                <div class="table-responsive">
+                    <?php if (isset($agendamentos) && !empty($agendamentos)): ?>
+                        <table class="table mb-4" id="listagem-agendamentos">
+                            <thead>
+                                <tr>
+                                    <th><strong>Aluno(a)<i class="mdi mdi-chevron-down"></i></strong></th>
+                                    <th><strong>Turma<i class="mdi mdi-chevron-down"></i></strong></th>
+                                    <th><strong>Data<i class="mdi mdi-chevron-down"></i></strong></th>
+                                    <th><strong>Status<i class="mdi mdi-chevron-down"></i></strong></th>
+                                    <th><strong>Motivo<i class="mdi mdi-chevron-down"></i></strong></th>
+                                    <th style="text-align: center; width: 10%; min-width: 100px;"><strong>Ações</strong></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <p>Nenhum agendamento encontrado no banco de dados.</p>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -325,10 +337,53 @@
                 }
             });
 
+            // Função para converter data no formato DMY para objeto Date
+            function parseDateDMY(str) {
+                if (typeof str !== 'string' || !str.trim()) return null;
+
+                const s = str.trim();
+
+                // Padrões de formato possíveis
+                const isoPattern = /^(\d{4})-(\d{2})-(\d{2})$/;  // YYYY-MM-DD
+                const brPattern  = /^(\d{2})\/(\d{2})\/(\d{4})$/; // DD/MM/YYYY
+
+                let dia, mes, ano;
+
+                if (isoPattern.test(s)) {
+                    [, ano, mes, dia] = s.match(isoPattern).map(Number);
+                } else if (brPattern.test(s)) {
+                    [, dia, mes, ano] = s.match(brPattern).map(Number);
+                } else {
+                    return null; // formato não reconhecido
+                }
+
+                const data = new Date(ano, mes - 1, dia);
+
+                // Garante que a data é válida (ex: 31/02 -> inválida)
+                return isNaN(data.getTime()) ? null : data;
+            }
+
+            if ($('#datepicker-popup').length) {
+                $('#datepicker-popup').datepicker('destroy'); // remove a configuração antiga
+                $('#datepicker-popup').datepicker({
+                    format: 'dd/mm/yyyy',
+                    autoclose: true,
+                    todayHighlight: true,
+                    language: 'pt-BR'
+                });
+            }
+
             $('#btn-filtrar').on('click', function () {
                 const turmaSelecionada = $('#filtro-turma').val()?.trim(); // pega o value
                 const statusSelecionado = $('#filtro-status').val()?.toLowerCase().trim();
                 const motivoSelecionado = $('#filtro-motivo').val()?.toLowerCase().trim();
+
+                const dataInicioStr = $('#datepicker-popup input:first').val()?.trim(); 
+                const dataFimStr = $('#datepicker-popup input:last').val()?.trim();
+
+                // Converte para objetos Date (se existirem)
+                const dataInicio = parseDateDMY(dataInicioStr);
+                const dataFim = parseDateDMY(dataFimStr);
 
                 const filtrados = agendamentosData.filter(item => {
                     // Se turmaSelecionada estiver vazia (""), retorna todas
@@ -337,7 +392,16 @@
                     const matchStatus = !statusSelecionado || item.status?.toLowerCase().trim() === statusSelecionado;
                     const matchMotivo = !motivoSelecionado || item.motivo?.toLowerCase().trim() === motivoSelecionado;
 
-                    return matchTurma && matchStatus && matchMotivo;
+                    // Filtro de datas
+                    let matchData = true;
+                    if (dataInicio || dataFim) {
+                        const itemData = parseDateDMY(item.data); // item.data deve estar no formato YYYY-MM-DD
+                        if (!itemData) return false;
+                        if (dataInicio && itemData < dataInicio) matchData = false;
+                        if (dataFim && itemData > dataFim) matchData = false;
+                    }
+
+                    return matchTurma && matchStatus && matchMotivo && matchData;
                 });
 
                 tabela.clear().rows.add(filtrados).draw();

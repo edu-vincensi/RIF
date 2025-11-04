@@ -12,7 +12,7 @@ class EnviarMensagensModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['destinatario', 'mensagem', 'status', 'data_envio', 'data_cadastro'];
+    protected $allowedFields    = ['destinatario', 'mensagem', 'status', 'data_envio', 'data_cadastro', 'categoria'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -34,6 +34,7 @@ class EnviarMensagensModel extends Model
         'mensagem'      => 'required',
         'status'        => 'required|in_list[0,1]',
         'data_cadastro' => 'permit_empty|valid_date',
+        'categoria'     => 'required',
     ];
     
     protected $validationMessages   = [
@@ -50,6 +51,9 @@ class EnviarMensagensModel extends Model
         ],
         'data_cadastro' => [
             'valid_date' => 'O campo data de cadastro deve ser uma data válida.',
+        ],
+        'categoria' => [ 
+            'required'              => 'O campo categoria é obrigatório.',
         ],
     ];
 

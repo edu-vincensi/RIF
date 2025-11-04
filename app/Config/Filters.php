@@ -41,7 +41,7 @@ class Filters extends BaseFilters
         // Filtros do Shield
         'session'       => SessionAuth::class, 
         
-        // NOVO FILTRO: filtro customizado
+        // FILTRO CUSTOMIZADO
         'app_group'     => GroupFilter::class, 
     ];
 
@@ -71,16 +71,22 @@ class Filters extends BaseFilters
      * List of filter aliases that are always
      * applied before and after every request.
      *
-     * CORREÇÃO: Removemos 'session' daqui. Agora, a sessão será ativada apenas no grupo 'sys' do Routes.php.
-     *
      * @var array<string, array<string, array<string, string>>>|array<string, list<string>>
      */
     public array $globals = [
         'before' => [
+            'session' => [
+                'except' => [
+                    'login', 
+                    'register', 
+                    'forgot-password', 
+                    'reset-password', 
+                    'email-verification',
+                ],
+            ],
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
-            // A linha 'session' foi removida para resolver o problema de carregamento de grupo.
         ],
         'after' => [
             // 'honeypot',

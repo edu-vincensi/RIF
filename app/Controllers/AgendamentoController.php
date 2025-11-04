@@ -47,6 +47,23 @@ class AgendamentoController extends BaseController
             $datas      = explode(',', $datasString);
 
             $controleModel = new ControleRefeicoesModel();
+
+        foreach ($matriculas as $matricula) {
+            foreach ($datas as $data) {
+                $existe = $controleModel
+                    ->where('aluno_id', $matricula)
+                    ->where('data_refeicao', $data)
+                    ->first();
+
+                if ($existe) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => "O aluno já possui agendamento no dia {$data}."
+                    ]);
+                }
+            }
+        }
+
             $inserido = $controleModel->createAgendamentos($matriculas, $datas, $status, $motivo);
 
             if ($inserido) {
@@ -88,6 +105,22 @@ class AgendamentoController extends BaseController
         }
 
         $controleModel = new ControleRefeicoesModel();
+
+        foreach ($newMatriculas as $matricula) {
+             foreach ($newDatas as $data) {
+                 $existe = $controleModel
+                ->where('aluno_id', $matricula)
+                ->where('data_refeicao', $data)
+                ->where('motivo !=', $originalMotivo)
+                ->first();
+
+        if ($existe) {
+            session()->setFlashdata('erros', ["O aluno já possui agendamento no dia."]);
+            return redirect()->back();
+        }
+    }
+}
+
         $sucesso = $controleModel->updateAgendamentos(
             $originalAlunoIds,
             $originalDatas,

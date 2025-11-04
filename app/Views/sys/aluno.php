@@ -33,7 +33,38 @@
         <div class="card ">
             <div class="card-body">
                 <div class="mb-3">
-                    <h5 class="card-title mb-0">Filtros</h5>
+                    <h5 class="card-title">Filtros</h5>
+                    <div class="form-group row align-items-end">
+                        <div class="col-md-3">
+                            <label for="filtro-curso">Curso</label>
+                            <select id="filtro-curso" class="js-example-basic-single" style="width:100%">
+                                <option value="">--</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="filtro-turma">Turma</label>
+                            <select id="filtro-turma" class="js-example-basic-single" style="width:100%">
+                                <option value="">--</option>
+                                <?php foreach ($turmas as $turma): ?>
+                                    <option value="<?= esc($turma['nome']) ?>"><?= esc($turma['nome']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="filtro-status">Status</label>
+                            <select id="filtro-status" class="js-example-basic-single" style="width:100%">
+                                <option value="">--</option>
+                                <option value="Ativo">Ativo</option>
+                                <option value="Inativo">Inativo</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2 text-start">
+                            <button type="button" id="btn-filtrar-alunos" class="btn btn-primary">Filtrar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -97,6 +128,21 @@
     const alunosData = <?= json_encode($alunos) ?>;
 
     $(document).ready(function() {
+
+        //ESSA PARTE APENAS RENDERIZA O MODELO DO CORONA
+        $('.js-example-basic-single').select2();
+
+        
+        const cursosSet = new Set();
+        alunosData.forEach(aluno => {
+            if (aluno.curso_nome) cursosSet.add(aluno.curso_nome);
+        });
+
+        const $cursoSelect = $('#filtro-curso');
+        cursosSet.forEach(curso => {
+            $cursoSelect.append(`<option value="${curso}">${curso}</option>`); // Adiciona cada curso ao select
+        });
+
         // Objeto que contém os templates e a lógica para cada tipo de repetidor
         const repeaters = {
             email: {
@@ -237,7 +283,7 @@
         $('#deletarModal').on('show.bs.modal', handleDeletarModalShow);
         
         // Inicialização do DataTables
-        $('#tabela-alunos').DataTable({
+        const table = $('#tabela-alunos').DataTable({  //OBS: MUDEI A VÁRIAVEL PARA CONST
             data: alunosData,
             columns: [
                 { data: 'matricula' },
@@ -320,6 +366,25 @@
             drawCallback: function() {
                 initTooltips();
             }
+        });
+
+        // Filtro de DataTable
+        $.fn.dataTable.ext.search.push(function(settings, data) {
+            const curso = $('#filtro-curso').val();
+            const turma = $('#filtro-turma').val();
+            const status = $('#filtro-status').val();
+
+            const rowCurso = data[3]; // coluna Curso
+            const rowTurma = data[2]; // coluna Turma
+            const rowStatus = data[6]; // coluna Status
+
+            return (!curso || rowCurso === curso) &&
+                (!turma || rowTurma === turma) &&
+                (!status || rowStatus === status);
+        });
+
+        $('#btn-filtrar-alunos').on('click', function() {
+            table.draw();
         });
 
         // Lógica de notificação

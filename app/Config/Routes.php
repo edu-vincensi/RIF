@@ -7,18 +7,17 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 
-$routes->get('/', 'Home::index', ['filter' => 'session']); 
+$routes->get('/', 'Home::index'); 
 
 $routes->get('/teste', 'Home::teste');
 
-// Shield Auth routes
 service('auth')->routes($routes);
 
 
 // =================================================================================
-// GRUPO PRINCIPAL: Rotas protegidas. Exige que o usuário esteja logado.
+// GRUPO PRINCIPAL: Rotas Protegidas do Sistema (/sys)
 // =================================================================================
-$routes->group('sys', ['filter' => 'session'], static function ($routes) {
+$routes->group('sys', [], static function ($routes) {
 
     //==============================================================
     // Rotas de Cursos - Acesso para 'admin' E/OU 'developer'
@@ -95,9 +94,9 @@ $routes->group('sys', ['filter' => 'session'], static function ($routes) {
     });
 
     //==============================================================
-    // Rotas de Solicitação de Refeições - Acesso para 'aluno' E/OU 'solicitante'
+    // Rotas de Solicitação de Refeições - Acesso para 'aluno', 'solicitante', 'admin' E/OU 'developer'
     //==============================================================
-    $routes->group('solicitacoes', ['filter' => 'app_group:aluno,solicitante'], static function ($routes) {
+    $routes->group('solicitacoes', ['filter' => 'app_group:aluno,solicitante,admin,developer'], static function ($routes) {
         $routes->get('', 'SolicitacaoRefeicoesController::index');
         $routes->post('create', 'SolicitacaoRefeicoesController::create');
         $routes->post('update', 'SolicitacaoRefeicoesController::update');
@@ -105,7 +104,7 @@ $routes->group('sys', ['filter' => 'session'], static function ($routes) {
     });
 
     //==============================================================
-    // Rotas de Análise de solicitação - Acesso Restrito (CORRIGIDO: Apenas Admin/Developer)
+    // Rotas de Análise de solicitação - Acesso Restrito
     //==============================================================
     $routes->get('analise', 'AnaliseSolicitacaoController::index', ['filter' => 'app_group:admin,developer']);
 
@@ -131,10 +130,10 @@ $routes->group('sys', ['filter' => 'session'], static function ($routes) {
     // Rotas do Admin para o gerenciamento de usuários - Acesso para 'admin'
     //==============================================================
     $routes->group('admin', ['filter' => 'app_group:admin'], static function ($routes) {
-        $routes->get('/', 'AdminController::index'); // Página inicial da admin
-        $routes->post('alterar-grupo', 'AdminController::alterarGrupoUsuario'); // Atribuir a um grupo de usuários
+        $routes->get('/', 'AdminController::index'); 
+        $routes->post('alterar-grupo', 'AdminController::alterarGrupoUsuario'); 
         $routes->post('atualizar-usuario', 'AdminController::atualizarUsuario'); 
-        $routes->post('resetar-senha', 'AdminController::resetarSenha'); // Atualizar senha
+        $routes->post('resetar-senha', 'AdminController::resetarSenha'); 
         $routes->post('desativar-usuario', 'AdminController::desativarUsuario');
         $routes->post('registrar-usuario', 'AdminController::registrarUsuario');
         $routes->get('usuarios-inativos', 'AdminController::usuariosInativos');
@@ -143,5 +142,5 @@ $routes->group('sys', ['filter' => 'session'], static function ($routes) {
     });
 });
 
-//Rota do Webhook (Fora do grupo protegido)
+// Rota do Webhook (Fora do grupo protegido)
 $routes->post('webhook/response', 'WebhookController::response');
