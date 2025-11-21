@@ -556,7 +556,7 @@ class AlunoController extends BaseController
         $enviaMensagensModel = new EnviarMensagensModel();
 
         $dataMensagem = [
-            'destinatario' => $destinodestinoReal,
+            'destinatario' => $destinoReal,
             'mensagem'     => $mensagem,
             'status'       => 0, 
             'categoria'    => 2, 
