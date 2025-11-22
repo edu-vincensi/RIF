@@ -7,12 +7,14 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 
-$routes->get('/', 'Home::index'); 
+$routes->get('/', 'Home::index');
+
+//Deploy
+$routes->post('deploy', 'DeployController::index');
 
 $routes->get('/teste', 'Home::teste');
 
 service('auth')->routes($routes);
-
 
 // =================================================================================
 // GRUPO PRINCIPAL: Rotas Protegidas do Sistema (/sys)
