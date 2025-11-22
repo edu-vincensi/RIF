@@ -9,27 +9,38 @@
                 </button>
             </div>
 
-            <form id="form-editar-solicitacao" class="forms-sample" method="post" action="<?php echo base_url('sys/solicitacoes/update'); ?>">
+            <form id="form-editar-solicitacao" class="forms-sample" method="post" action="<?php echo base_url('sys/solicitacoes/admin/update'); ?>">
                 <?php echo csrf_field() ?>
 
                 <div class="modal-body">
 
                     <input type="hidden" id="edit-id" name="id" />
-                    <input type="hidden" id="edit-status" name="status" />
+                    <input type="hidden" id="original_aluno_id" name="original_aluno_id">
+                    <input type="hidden" id="original_data_refeicao" name="original_data_refeicao">
+                    <input type="hidden" id="original_motivo" name="original_motivo">
 
                     <div class="mb-3">
-                        <label for="edit-turma_id" class="form-label">Turma</label>
-                        <select id="edit-turma_id" name="turma_id" class="form-select py-2" required>
-                            <option value="<?php echo null ?>">Selecione a turma</option>
+                        <label for="edit_turma_id" class="form-label">Selecione a Turma(s)</label>
+                        <select id="edit_turma_id" name="turma_id[]" class="js-example-basic-multiple" multiple="multiple" style="width: 100%;">
                             <?php foreach ($turmas as $turma): ?>
-                                <option value="<?php echo $turma['id'] ?>"><?= esc($turma['nome']) ?></option>
+                                <option value="<?= $turma['id'] ?>">
+                                    <?= esc($turma['nome_turma'] . ' - ' . esc($turma['nome_curso'])) ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label for="edit-data_refeicao" class="form-label">Data da refeição</label>
-                        <input type="date" class="form-control" id="edit-data_refeicao" name="data_refeicao" required>
+                        <label for="edit_alunos_id" class="form-label">Selecione os Alunos</label>
+                        <select id="edit_alunos_id" name="aluno_id" class="js-example-basic-multiple" multiple="multiple" style="width:100%">
+                            <!-- Opções serão carregadas dinamicamente via JS -->
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Data(s) da Solicitação</label>
+                        <div id="edit-inline-datepicker" class="datepicker"></div>
+                        <input type="hidden" id="edit_datas-hidden" name="data_refeicao">
                     </div>
 
                     <div class="mb-3 d-flex gap-3">
@@ -43,16 +54,16 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="edit-justificativa" class="form-label">Justificativa</label>
-                        <textarea
-                            name="justificativa"
-                            id="edit-justificativa"
-                            class="form-control"
-                            rows="3"
-                            maxlength="255"
-                            style="min-height: 80px;"
-                            require></textarea>
+                    <div class="col-md-6 mb-3">
+                        <label for="edit_motivo" class="form-label">Motivo</label>
+                        <select class="form-select" name="motivo" id="edit_motivo" required>
+                            <option value="" disabled>Selecione o motivo</option>
+                            <option value="0">Contraturno</option>
+                            <option value="1">Estágio</option>
+                            <option value="2">Treino</option>
+                            <option value="3">Projeto</option>
+                            <option value="4">Visita Técnica</option>
+                        </select>
                     </div>
                 </div>
 
@@ -65,30 +76,3 @@
         </div>
     </div>
 </div>
-
-<script>
-    $(document).ready(function() {
-
-        $("#modal-editar-solicitacao").on("show.bs.modal", function(event) {
-            var form = $(event.relatedTarget);
-
-            var id = form.data("id");
-            var status = form.data("status");
-            var turma_id = form.data("turma_id");
-            var data_refeicao = form.data("data_refeicao");
-            var crc = form.data("crc");
-            var codigo = form.data("codigo");
-            var justificativa = form.data("justificativa");
-
-            var modal = $(this);
-            modal.find("#edit-id").val(id);
-            modal.find("#edit-status").val(status);
-            modal.find("#edit-turma_id").val(turma_id);
-            modal.find("#edit-data_refeicao").val(data_refeicao);
-            modal.find("#edit-crc").val(crc);
-            modal.find("#edit-codigo").val(codigo);
-            modal.find("#edit-justificativa").val(justificativa);
-        });
-
-    });
-</script>

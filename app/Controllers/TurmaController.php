@@ -183,11 +183,10 @@ class TurmaController extends BaseController
         $mapeiaCabecalho = [
             'matricula'      => array_search('Matrícula', $cabecalho ),
             'nome'           => array_search('Aluno', $cabecalho ),
-            'status'         => array_search('Situação no Curso', $cabecalho ),
         ];
 
         if (in_array(false, $mapeiaCabecalho, true)) {
-            session()->setFlashdata('erros', ['A planilha não contém todas as colunas necessárias (Matrícula, Aluno, Situação no Curso).']);
+            session()->setFlashdata('erros', ['A planilha não contém todas as colunas necessárias (Matrícula e Aluno).']);
             return redirect()->to(base_url('sys/turmas'));
         }
 
@@ -212,13 +211,9 @@ class TurmaController extends BaseController
             $nomeAluno = $rowData[$mapeiaCabecalho['nome']];
             $matricula = $rowData[$mapeiaCabecalho['matricula']];
             
-            $status = $rowData[$mapeiaCabecalho['status']];
-            $status_padrao = ($status === 'Matriculado' || $status === 'Matrícula Vínculo Institucional') ? 'ativo' : 'inativo';
-
             $dataRows[] = [
                 'nome'      => $nomeAluno,
                 'matricula'     => $matricula ,
-                'status'    => $status_padrao,
                 'turma_id'  => $turmaId 
             ];
 

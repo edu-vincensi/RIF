@@ -9,6 +9,18 @@
                 </button>
             </div>
 
+            <div class="card">
+                <div class="card-body">
+                    <div class="alert alert-primary text-dark" role="alert">
+                        <i class="fa fa-info-circle"></i><strong>Caminho para exportação destes dados no SUAP:</strong><br>
+                        //<br>
+                        //<br>
+                        Clicar no botão [Exportar para XLS], no canto superior direito.<br>
+                        Salvar o arquivo e então enviar através do campo abaixo.
+                    </div>
+                </div>
+            </div>
+
             <form id="form-importar-aluno" class="forms-sample" method="post" action="<?php echo base_url('sys/alunos/import'); ?>" enctype="multipart/form-data">
 	            <?php echo csrf_field() ?>
                 

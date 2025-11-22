@@ -40,10 +40,6 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
-                        <div class="col-md-1 d-grid">
-                            <button type="button" id="btn-filtrar-curso" class="btn btn-primary">Filtrar</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -138,7 +134,7 @@
                                             <i class="fa fa-trash"></i>
                                         </button>
                                     </span>
-                                    <span data-bs-toggle="tooltip" data-placement="top" title="Importar Lista de alunos">
+                                    <span data-bs-toggle="tooltip" data-placement="top" title="Vincular alunos para essa Turma">
                                         <button
                                             type="button"
                                             class="justify-content-center align-items-center d-flex btn btn-inverse-info button-trans-info btn-icon me-1 import-alunos-btn"
@@ -173,8 +169,8 @@
                 }
             });
 
-            $('#btn-filtrar-curso').on('click', function() {
-                const valorCurso = $('#filtro-curso').val();
+            $('#filtro-curso').on('change', function() {
+                const valorCurso = $(this).val();
                 const table = $('#tabela-turmas').DataTable();
 
                 if (valorCurso) {
@@ -182,7 +178,16 @@
                 } else {
                     table.column(3).search('').draw();
                 }
+                // Salva no localStorage
+                localStorage.setItem('filtroCursoTurmas', valorCurso);
             });
+        }
+
+        const table = $('#tabela-turmas').DataTable();
+        const valorCurso = localStorage.getItem('filtroCursoTurmas');
+        if (valorCurso) {
+            $('#filtro-curso').val(valorCurso).trigger('change'); // atualiza visualmente o select2
+            table.column(3).search('^' + valorCurso + '$', true, false).draw();
         }
     
         // Lógica de notificação

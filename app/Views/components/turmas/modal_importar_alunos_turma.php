@@ -3,10 +3,22 @@
         <div class="modal-content">
 
             <div class="modal-header">
-                <h5 class="modal-title" id="modal-importar-aluno-label">Importar Lista de Alunos<h5>
+                <h5 class="modal-title" id="modal-importar-aluno-label">Vincular Alunos a Turma<h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="alert alert-primary text-dark" role="alert">
+                        <i class="fa fa-info-circle"></i><strong>Caminho para exportação destes dados no SUAP:</strong><br>
+                        //<br>
+                        //<br>
+                        Clicar no botão [Exportar para XLS], no canto superior direito.<br>
+                        Salvar o arquivo e então enviar através do campo abaixo.
+                    </div>
+                </div>
             </div>
 
             <form id="form-importar-aluno" class="forms-sample" method="post" action="<?php echo base_url('sys/turmas/import'); ?>" enctype="multipart/form-data">

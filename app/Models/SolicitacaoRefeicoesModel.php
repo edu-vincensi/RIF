@@ -12,7 +12,7 @@ class SolicitacaoRefeicoesModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['turma_id', 'data_refeicao', 'crc', 'status', 'codigo', 'justificativa', 'id_creat', 'data_solicitada'];
+    protected $allowedFields    = ['aluno_id', 'data_refeicao', 'crc', 'status', 'codigo', 'motivo', 'id_creat', 'data_solicitada'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -30,16 +30,16 @@ class SolicitacaoRefeicoesModel extends Model
     // Validation
     protected $validationRules = [
         'id' => 'permit_empty|is_natural_no_zero|max_length[11]',
-        'turma_id' => 'required|is_natural_no_zero',
+        'aluno_id' => 'required|is_natural_no_zero',
         'data_refeicao' => 'required|date',
         'crc' => 'required|string',
         'status' => 'permit_empty|numeric',
         'codigo' => 'required|numeric',
-        'justificativa' => 'required|string|max_length[255]|min_length[8]',
+        'motivo' => 'required|in_list[0,1,2,3,4]',
     ];
 
     protected $validationMessages = [
-        'turma_id' => [
+        'aluno_id' => [
             'required' => 'Informe a turma.',
             'is_natural_no_zero' => 'Informe um valor válido.',
         ],
@@ -56,10 +56,9 @@ class SolicitacaoRefeicoesModel extends Model
         'codigo' => [
             'required' => 'Informe o código da solicitação.',
         ],
-        'justificativa' => [
-            'required' => 'Informe a justificativa da solicitação.',
-            'min_length' => 'A justificativa deve ter pelo menos 8 caracteres.',
-            'max_length' => 'A justificativa deve ter no máximo 255 caracteres.',
+        'motivo' => [
+            'required' => 'Informe o motivo',
+            'in_list' => 'Selecione um motivo válido.',
         ],
     ];
 

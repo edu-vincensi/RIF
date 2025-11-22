@@ -61,16 +61,13 @@
                             <option value="Visita Técnica">Visita Técnica</option>
                         </select>
                       </div>
-                      <div class="col-md-4">
+                      <div class="col-md-5">
                         <label for="">Período:</label>
                         <div id="datepicker-popup" class="input-group input-daterange d-flex align-items-center">
                             <input type="text" class="form-control" style="background-color: black;"> 
                             <div class="input-group-addon mx-4"> até </div>
                             <input type="text" class="form-control" style="background-color: black;">
                         </div>
-                      </div>
-                      <div class="col-md-2 text-start">
-                        <button id="btn-filtrar" class="btn btn-primary">Filtrar</button>
                       </div>
                     </div>
                 </div>
@@ -127,6 +124,10 @@
         border-top-color: #333 !important;
     }
 
+    .datepicker table tr td.today.active::before {
+        background-color: #28a745 !important;
+        color: #fff !important;
+    }
 </style>
 
 <script>
@@ -171,7 +172,22 @@
         $('#edit_matriculas-hidden').val(Array.from(alunosSelecionadosEdit.keys()).join(','));
     }
 
+    function restaurarFiltros() {
+        const salvo = localStorage.getItem('filtrosAgendamentos');
+        if (!salvo) return;
+
+        const filtros = JSON.parse(salvo);
+
+        $('#filtro-turma').val(filtros.turma);
+        $('#filtro-status').val(filtros.status);
+        $('#filtro-motivo').val(filtros.motivo);
+        $('#datepicker-popup input:first').val(filtros.dataInicio);
+        $('#datepicker-popup input:last').val(filtros.dataFim);
+    }
+
+
     $(document).ready(function() {
+        restaurarFiltros();
 
         //ESSA PARTE APENAS RENDERIZA O MODELO DO CORONA
         $('.js-example-basic-single').select2();
@@ -319,29 +335,26 @@
                 });
             }
 
-            $('#btn-filtrar').on('click', function () {
-                const turmaSelecionada = $('#filtro-turma').val()?.trim(); // pega o value
+            function filtrarTabela() {
+                const turmaSelecionada = $('#filtro-turma').val()?.trim();
                 const statusSelecionado = $('#filtro-status').val()?.toLowerCase().trim();
                 const motivoSelecionado = $('#filtro-motivo').val()?.toLowerCase().trim();
 
                 const dataInicioStr = $('#datepicker-popup input:first').val()?.trim(); 
                 const dataFimStr = $('#datepicker-popup input:last').val()?.trim();
 
-                // Converte para objetos Date (se existirem)
                 const dataInicio = parseDateDMY(dataInicioStr);
                 const dataFim = parseDateDMY(dataFimStr);
 
                 const filtrados = agendamentosData.filter(item => {
-                    // Se turmaSelecionada estiver vazia (""), retorna todas
-                    const matchTurma = !turmaSelecionada || item.turma?.includes($('#filtro-turma option:selected').text().trim());
 
+                    const matchTurma = !turmaSelecionada || item.turma?.includes($('#filtro-turma option:selected').text().trim());
                     const matchStatus = !statusSelecionado || item.status?.toLowerCase().trim() === statusSelecionado;
                     const matchMotivo = !motivoSelecionado || item.motivo?.toLowerCase().trim() === motivoSelecionado;
 
-                    // Filtro de datas
                     let matchData = true;
                     if (dataInicio || dataFim) {
-                        const itemData = parseDateDMY(item.data); // item.data deve estar no formato YYYY-MM-DD
+                        const itemData = parseDateDMY(item.data);
                         if (!itemData) return false;
                         if (dataInicio && itemData < dataInicio) matchData = false;
                         if (dataFim && itemData > dataFim) matchData = false;
@@ -351,9 +364,49 @@
                 });
 
                 tabela.clear().rows.add(filtrados).draw();
+            }
+
+            function salvarFiltros() {
+                const filtros = {
+                    turma: $('#filtro-turma').val(),
+                    status: $('#filtro-status').val(),
+                    motivo: $('#filtro-motivo').val(),
+                    dataInicio: $('#datepicker-popup input:first').val(),
+                    dataFim: $('#datepicker-popup input:last').val()
+                };
+
+                localStorage.setItem('filtrosAgendamentos', JSON.stringify(filtros));
+            }
+
+
+            $('#filtro-turma').on('change', function() {
+                salvarFiltros();
+                filtrarTabela();
             });
 
-        }        
+            $('#filtro-status').on('change', function() {
+                salvarFiltros();
+                filtrarTabela();
+            });
+
+            $('#filtro-motivo').on('change', function() {
+                salvarFiltros();
+                filtrarTabela();
+            });
+
+            $('#datepicker-popup').on('changeDate', function() {
+                salvarFiltros();
+                filtrarTabela();
+            });
+
+            $('#datepicker-popup input').on('keyup change', function() {
+                salvarFiltros();
+                filtrarTabela();
+            });
+        } 
+        
+        filtrarTabela();
+        
         // Modal de EXCLUSÃO de Agendamento
         $('#listagem-agendamentos').on('click', '.btn-excluir-agendamento', function() {
             const button = $(this);

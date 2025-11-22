@@ -97,12 +97,14 @@ class ProcessaEnvioMensagens extends BaseCommand
 
                     $nomeTurmaCurso = $turmaModel->getNomeTurmaComCurso($aluno['turma_id']);
 
-                    $conteudoQrCode = implode('|', [
-                        $alunoId,
-                        $aluno['nome'],
-                        $nomeTurmaCurso,
-                        $refeicao['data_refeicao'],
-                    ]);
+                    // $conteudoQrCode = implode('|', [
+                    //     $alunoId,
+                    //     $aluno['nome'],
+                    //     $nomeTurmaCurso,
+                    //     $refeicao['data_refeicao'],
+                    // ]);
+
+                    $conteudoQrCode = $refeicao['id'];
 
                     try {
 
