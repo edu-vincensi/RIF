@@ -20,10 +20,15 @@
                         <small class="text-danger"> *</small>
                         <input type="text" class="form-control" id="matricula" name="matricula" placeholder="Ex: 20230001" required>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="curso" class="form-label">Curso</label>
+                        <input type="text" class="form-control" id="curso" name="curso" disabled placeholder="Selecione uma turma antes">
+                    </div>
+
                     <div class="mb-3">
                         <label for="turma_id" class="form-label">Turma</label>
-                        <small class="text-danger"> *</small>
-                        <select class="form-control" id="turma_id" name="turma_id" required>
+                        <select class="form-control" id="turma_id" name="turma_id">
                             <option value="">Selecione uma turma</option>
                             <?php if (!empty($turmas)): ?>
                                 <?php foreach ($turmas as $turma): ?>
@@ -33,10 +38,6 @@
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="curso" class="form-label">Curso</label>
-                        <input type="text" class="form-control" id="curso" name="curso" disabled placeholder="Selecione uma turma antes">
                     </div>
                     <div class="mb-3">
                         <label for="status" class="form-label">Status</label>
@@ -52,7 +53,7 @@
                         <div id="email-repeater-container"></div>
                     </div>
                     <div class="card-body">
-                        <label for="telefones" class="form-label">Telefone</label>
+                        <label for="telefones" class="form-label">Telefone (WhatsApp)</label>
                         <small class="text-danger"> *</small>
                         <div id="telefone-repeater-container"></div>
                     </div>
