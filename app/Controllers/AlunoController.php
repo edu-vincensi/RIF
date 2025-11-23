@@ -293,93 +293,160 @@ class AlunoController extends BaseController
         }
 
         $sheet = $spreadsheet->getActiveSheet(); //Pega a 1° aba
-        $dataRows = [];
         $primeiraLinha = true;
         $cabecalho = $sheet->toArray(null, false, true, false)[0];
 
+        $cabecalhoNormalizado = array_map(function($valor) {
+            return trim(mb_convert_encoding($valor, 'UTF-8', 'UTF-8')); // normaliza primeiro
+        }, $cabecalho);
+
         $mapeiaCabecalho = [
-            'matricula'      => array_search('Matrícula', $cabecalho ),
-            'nome'           => array_search('Nome', $cabecalho ),
-            'descricao_curso'=> array_search('Descrição do Curso', $cabecalho),
-            'status'         => array_search('Situação no Curso', $cabecalho ),
-            'telefone'       => array_search('Telefone', $cabecalho ),
-            'cod_turma'      => array_search('Turma', $cabecalho ),
+            'matricula'      => array_search('Matrícula', $cabecalhoNormalizado),
+            'nome'           => array_search('Nome', $cabecalhoNormalizado),
+            'descricao_curso'=> array_search('Descrição do Curso', $cabecalhoNormalizado),
+            'status'         => array_search('Situação no Curso', $cabecalhoNormalizado),
+            'telefone'       => array_search('Telefone', $cabecalhoNormalizado),
         ];
 
         if (in_array(false, $mapeiaCabecalho, true)) {
-            session()->setFlashdata('erros', ['A planilha não contém todas as colunas necessárias (Matrícula, Nome, Descrição do Curso, Situação no Curso, Telefone, Turma).']);
+            session()->setFlashdata('erros', ['A planilha não contém todas as colunas necessárias (Matrícula, Nome, Descrição do Curso, Situação no Curso, Telefone).']);
             return redirect()->to(base_url('sys/alunos'));
         }
 
-        foreach ($sheet->getRowIterator() as $row) 
-        {
+        //Pegar os cursos
+        $cursosEncontrados = [];
+        $alunos = [];
+
+        foreach ($sheet->getRowIterator() as $row){
+
             //Pra não contar com a primeira linha que é cabeçalho
-            if ($primeiraLinha) 
-            {
+            if ($primeiraLinha) {
                 $primeiraLinha = false;
                 continue;
             }
 
             $cellIterator = $row->getCellIterator();
             $cellIterator->setIterateOnlyExistingCells(false);
+
             $rowData = [];
-
-            foreach ($cellIterator as $cell) 
-            {
-                $rowData[] = $cell->getValue(); //pega os dados da linha
+            foreach ($cellIterator as $cell) {
+                $rowData[] = $cell->getValue(); // pega os dados da linha
             }
 
-            //Só vai salvar os alunos matriculados
-            $status = $rowData[$mapeiaCabecalho['status']];
-            if ($status !== 'Matriculado') {
-                continue; 
-            }
 
-            //Só vai pegar o ensino médio 
+            // Descrição Curso
             $descricao_curso = $rowData[$mapeiaCabecalho['descricao_curso']];
-            if (stripos($descricao_curso, 'Integrado ao Ensino Médio') === false) {
-                continue; 
+            
+            // Ignora os FIC
+            if (stripos($descricao_curso, 'FIC') === 0) {
+                continue;
             }
 
+            $cursosEncontrados[] = $descricao_curso;
+
+            // Status
+            $status = trim($rowData[$mapeiaCabecalho['status']]);
+            if ($status !== 'Matriculado') { //Só vai salvar os alunos matriculados
+                continue; 
+            }
+            
+
+            // Matricula
             $matricula = $rowData[$mapeiaCabecalho['matricula']];
             $matricula_limpa = preg_replace('/[^0-9]/', '', $matricula);
 
+            // Nome
             $nome = $rowData[$mapeiaCabecalho['nome']];
 
-            $status_padrao = ($status === 'Matriculado')  ? 'ativo' : 'inativo';
-
-            $telefone =[];
-
-            if (isset($rowData[$mapeiaCabecalho['telefone']])) {
-                $telefones = explode(', ', $rowData[$mapeiaCabecalho['telefone']]); //separa eles
+            // Telefone
+            $telefone = [];
+            if (isset($rowData[$mapeiaCabecalho['telefone']])) { 
+                $telefones = explode(',', $rowData[$mapeiaCabecalho['telefone']]); //separa eles
+                
                 foreach ($telefones as $tel) {
                     $tel = trim($tel);
-                    if (!empty($tel)) {
-                        $telefone[] = $tel; 
+
+                    if (empty($tel)) {
+                        continue;
                     }
+
+                    $tel = preg_replace('/\D/', '', $tel);
+
+                    //Não pegar os fixo
+                    if (in_array(substr($tel, 2, 1), ['2','3','4','5'])) {
+                        continue;
+                    }
+
+                    //Padronizar numeros
+                    if (strlen($tel) === 10) {
+                        $tel = substr($tel, 0, 2) . '9' . substr($tel, 2);
+                    }
+
+                    $telefone[] = $tel; 
+            
                 }
 
                 $telefone = array_unique($telefone);
             }
 
-            $cod_turma_completo = $rowData[$mapeiaCabecalho['cod_turma']] ?? '';
-            $cod_turma= substr($cod_turma_completo, 0, 15);
-
-            $dataRows[] = [
-                'matricula' => $matricula_limpa,
-                'nome'      => $nome,
-                'status'    => $status_padrao,
-                'telefone' => $telefone,
-                'cod_turma'    => $cod_turma
+            $alunos[] = [
+                'matricula'   => $matricula_limpa,
+                'nome'        => $nome,
+                'curso'       => $descricao_curso,
+                'status'      => 'ativo',
+                'telefone'   => $telefone
             ];
-
         }
 
-        $data['alunos'] = $dataRows;
-        $data['import_completo'] = true;
-        $mainContent = view('sys/aluno-importar-form', $data);
-        return view('dashboard', ['content' => $mainContent]);
-        
+        $cursosEncontrados = array_unique($cursosEncontrados); 
+        sort($cursosEncontrados);
+
+        session()->set('alunos_import', $alunos);
+
+        $mainContent = view('sys/aluno-importar-filtro', [
+            'cursos' => $cursosEncontrados,
+        ]);
+
+        return view('dashboard', [
+            'content' => $mainContent
+        ]);
+
+    }
+
+    /**
+    * @route POST /alunos/filter
+    */
+    public function filter(){
+        $post = $this->request->getPost();
+
+        if (!isset($post['filtro']) || empty($post['filtro'])) {
+            session()->setFlashdata('erros', ['Selecione pelo menos um curso.']);
+            return redirect()->to(base_url('sys/alunos/import'));
+        }
+
+        $cursosSelecionados = $post['filtro']; 
+       
+        $alunos = session()->get('alunos_import') ?? [];
+
+        $alunosFiltrados = [];
+        foreach ($alunos as $aluno) {
+            if (in_array($aluno['curso'], $cursosSelecionados)) {
+                $alunosFiltrados[] = $aluno;
+            }
+        }
+
+        // Ordem alfabetica
+        $nomes = array_column($alunosFiltrados, 'nome'); 
+        array_multisort($nomes, SORT_ASC, $alunosFiltrados);
+
+        $mainContent = view('sys/aluno-importar-form', [
+            'alunos' => $alunosFiltrados,
+            'import_completo' => true
+        ]);
+
+        return view('dashboard', [
+            'content' => $mainContent
+        ]);
     }
 
     /**
@@ -396,74 +463,58 @@ class AlunoController extends BaseController
 
         $aluno = new AlunoModel();
         $telefoneModel = new AlunoTelefoneModel();
-        $turmaModel = new TurmaModel();
         
-        $testar_enviar_telefone = 0; // pra testar sem lotar de mensagem por enquanto
-
         $insertedCount = 0;
         $errors = [];
 
         foreach ($selecionados as $alunoJson) {
             $alunoData = json_decode($alunoJson, true, 512, JSON_BIGINT_AS_STRING);
+ 
+            $data = [
+                'matricula' => $alunoData['matricula'],
+                'nome'      => $alunoData['nome'],
+                'status'    => $alunoData['status'],
+            ];
 
-            $codTurma = $alunoData['cod_turma']; 
-            $turma = $turmaModel->where('codTurma', $codTurma)->first();
-
-            if ($turma) {
-                $turmaID = $turma['id'];
-                $data = [
-                    'matricula' => $alunoData['matricula'],
-                    'nome'      => $alunoData['nome'],
-                    'status'    => $alunoData['status'],
-                    'turma_id'  => $turmaID,
-                ];
-
-                $sucesso = $aluno->insert($data);
+            $sucesso = $aluno->insert($data);
                 
-                if (!$sucesso) {
-                    $errosDoModelo = $aluno->errors();
-                    $errors[] = "Ocorreu um erro ao importar o aluno de matrícula {$alunoData['matricula']}: " . implode(', ', $errosDoModelo);
-                } else {
-                    $insertedCount++;
-                    $alunoId = $aluno->getInsertID();
+            if (!$sucesso) {
+                $errosDoModelo = $aluno->errors();
+                $errors[] = "Ocorreu um erro ao importar o aluno de matrícula {$alunoData['matricula']}: " . implode(', ', $errosDoModelo);
+            } else {
+                $insertedCount++;
+                $alunoId = $aluno->getInsertID();
 
-                    $destino = null; // destino vai ser o primeiro telefone a tentar ser validado
+                $destino = null; // destino vai ser o primeiro telefone a tentar ser validado
 
-                    // Faz a inserção dos telefones
-                    if (!empty($alunoData['telefone'])) {
-                        foreach ($alunoData['telefone'] as $telefone) {
-                            if (!empty(trim($telefone)) && trim($telefone) !== '-') {
+                // Faz a inserção dos telefones
+                if (!empty($alunoData['telefone'])) {
+                    foreach ($alunoData['telefone'] as $telefone) {
+                        if (!empty(trim($telefone)) && trim($telefone) !== '-') {
 
-                                $telefonePadrao = str_replace(['(', ')', ' ', '-'], '', $telefone);
+                            $telefonePadrao = str_replace(['(', ')', ' ', '-'], '', $telefone);
                                 
-                                // pega o telefone a ser validado
-                                if ($destino === null) {
-                                    $destino = $telefonePadrao;
-                                }
-
-                                $telefoneModel->insert([
-                                    'aluno_id' => $alunoId,
-                                    'telefone' => $telefonePadrao,
-                                    'status' => 'inativo' // todos por padrão vão começar inativos
-                                ]);
+                            // pega o telefone a ser validado
+                            if ($destino === null) {
+                                $destino = $telefonePadrao;
                             }
-                        }
-                    }
 
-                    /**
-                    * Carrega os parâmetros pra função (Envio de Whatsapp)
-                    */
-                    if ($destino !== null) { 
-                        if ($testar_enviar_telefone < 5) { 
-                            $this->criaMensagemValidacao($alunoData, $destino);
-                            $testar_enviar_telefone++;
+                            $telefoneModel->insert([
+                                'aluno_id' => $alunoId,
+                                'telefone' => $telefonePadrao,
+                                'status' => 'inativo' // todos por padrão vão começar inativos
+                            ]);
                         }
                     }
-                    
                 }
 
-            } else {
-                $errors[] = "A turma com código '{$codTurma}' do aluno {$alunoData['nome']} ({$alunoData['matricula']}) não está cadastrada.";
+                /**
+                * Carrega os parâmetros pra função (Envio de Whatsapp)
+                */
+                if ($destino !== null) { 
+                    $this->criaMensagemValidacao($alunoData, $destino);
+                }
+                    
             }
         } // Fim do foreach
 
@@ -476,9 +527,10 @@ class AlunoController extends BaseController
         if (!empty($errors)) {
             $redirect->with('erros', $errors);
         }
-        
+            
         return $redirect;
     }
+    
 
     protected function redirectToBaseRoute($errors = null)
     {
@@ -493,7 +545,6 @@ class AlunoController extends BaseController
     protected function criaMensagemValidacao(array $alunoData, string $destino)
     {
         $destinoReal = $destino;
-        $destino = "69992809488"; //Próvisório 
 
         $nome = $alunoData['nome'];
 
@@ -505,7 +556,7 @@ class AlunoController extends BaseController
         $enviaMensagensModel = new EnviarMensagensModel();
 
         $dataMensagem = [
-            'destinatario' => $destino,
+            'destinatario' => $destinoReal,
             'mensagem'     => $mensagem,
             'status'       => 0, 
             'categoria'    => 2, 

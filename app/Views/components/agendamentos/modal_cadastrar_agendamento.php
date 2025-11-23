@@ -31,7 +31,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">Data(s) do Agendamento</label>
-                        <div id="datepicker-container-cadastro"></div> 
+                        <div id="inline-datepicker" class="datepicker"></div> 
                         <input type="hidden" name="datas" id="datas-hidden">
                     </div>
 

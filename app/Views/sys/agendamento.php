@@ -61,16 +61,13 @@
                             <option value="Visita Técnica">Visita Técnica</option>
                         </select>
                       </div>
-                      <div class="col-md-4">
+                      <div class="col-md-5">
                         <label for="">Período:</label>
                         <div id="datepicker-popup" class="input-group input-daterange d-flex align-items-center">
                             <input type="text" class="form-control" style="background-color: black;"> 
                             <div class="input-group-addon mx-4"> até </div>
                             <input type="text" class="form-control" style="background-color: black;">
                         </div>
-                      </div>
-                      <div class="col-md-2 text-start">
-                        <button id="btn-filtrar" class="btn btn-primary">Filtrar</button>
                       </div>
                     </div>
                 </div>
@@ -108,95 +105,28 @@
     </div>
 </div>
 
-<div class="modal fade" id="modal-ver-alunos" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Alunos do Agendamento</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body">
-                <ul id="lista-alunos-modal" class="list-group"></ul>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
-    .flatpickr-calendar {
-        background-color: #2a3038 !important;
-        color: #fff !important;
-        border: 1px solid #444 !important;
-        border-radius: 8px !important;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
-    }
-
-    .flatpickr-weekdaycontainer {
-        display: grid !important;
-        grid-template-columns: repeat(7, 1fr) !important;
-        text-align: center !important;
-    }
-
-    .flatpickr-weekday {
-        color: #fff !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        font-weight: 600 !important;
-    }
-
-    .flatpickr-days .dayContainer {
-        display: grid !important;
-        grid-template-columns: repeat(7, 1fr) !important;
-        grid-auto-rows: 38px !important; 
-        justify-items: center !important;
-        align-items: center !important;
-    }
-
-    .flatpickr-day {
-        color: #fff !important;
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 0.85rem !important;
-        line-height: 32px !important; 
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        border-radius: 50% !important;
-        transition: background 0.2s ease !important;
-    }
-
-    .flatpickr-day:hover {
-        background: #3a4048 !important;
-    }
-
-    .flatpickr-day.selected,
-    .flatpickr-day.startRange,
-    .flatpickr-day.endRange {
-        background: #007bff !important;
-        color: #fff !important;
-    }
-
-    .flatpickr-day.today {
-        border: 1px solid #007bff !important;
-    }
-
-    .flatpickr-current-month {
-        color: #fff !important;
-    }
-
-    .ver-alunos-link {
-        color: #ffffffff;
-        text-decoration: none;
-        cursor: pointer;
-        font-weight: 500;
-    }
-
-    .ver-alunos-link:hover {
-        color: #0056b3;
-    }
     .tooltip-on-top {
         z-index: 9999 !important;
+    }
+    
+    .tooltip-on-top .tooltip-inner {
+        background-color: #333;
+        color: #fff;
+        font-size: 13px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        text-align: center;
+        max-width: 220px;
+    }
+
+    .tooltip-on-top .tooltip-arrow::before {
+        border-top-color: #333 !important;
+    }
+
+    .datepicker table tr td.today.active::before {
+        background-color: #28a745 !important;
+        color: #fff !important;
     }
 </style>
 
@@ -242,7 +172,22 @@
         $('#edit_matriculas-hidden').val(Array.from(alunosSelecionadosEdit.keys()).join(','));
     }
 
+    function restaurarFiltros() {
+        const salvo = localStorage.getItem('filtrosAgendamentos');
+        if (!salvo) return;
+
+        const filtros = JSON.parse(salvo);
+
+        $('#filtro-turma').val(filtros.turma);
+        $('#filtro-status').val(filtros.status);
+        $('#filtro-motivo').val(filtros.motivo);
+        $('#datepicker-popup input:first').val(filtros.dataInicio);
+        $('#datepicker-popup input:last').val(filtros.dataFim);
+    }
+
+
     $(document).ready(function() {
+        restaurarFiltros();
 
         //ESSA PARTE APENAS RENDERIZA O MODELO DO CORONA
         $('.js-example-basic-single').select2();
@@ -255,6 +200,23 @@
             });
             $(this).find('.js-example-basic-multiple').select2({
                 dropdownParent: $('#modal-cadastrar-agendamento')
+            });
+
+            const $cal = $('#inline-datepicker');
+            $cal.datepicker('destroy'); // garante uma instância limpa
+            $cal.datepicker({
+                format: 'yyyy-mm-dd',
+                todayHighlight: true,
+                multidate: true,
+                language: 'pt-BR'
+            }).on('changeDate', function(e) {
+                const datas = e.dates.map(date => {
+                    const y = date.getFullYear();
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const d = String(date.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${d}`;
+                });
+                $('#datas-hidden').val(datas.join(','));
             });
         });
         //FIM DA PARTE DO CORONA
@@ -373,29 +335,26 @@
                 });
             }
 
-            $('#btn-filtrar').on('click', function () {
-                const turmaSelecionada = $('#filtro-turma').val()?.trim(); // pega o value
+            function filtrarTabela() {
+                const turmaSelecionada = $('#filtro-turma').val()?.trim();
                 const statusSelecionado = $('#filtro-status').val()?.toLowerCase().trim();
                 const motivoSelecionado = $('#filtro-motivo').val()?.toLowerCase().trim();
 
                 const dataInicioStr = $('#datepicker-popup input:first').val()?.trim(); 
                 const dataFimStr = $('#datepicker-popup input:last').val()?.trim();
 
-                // Converte para objetos Date (se existirem)
                 const dataInicio = parseDateDMY(dataInicioStr);
                 const dataFim = parseDateDMY(dataFimStr);
 
                 const filtrados = agendamentosData.filter(item => {
-                    // Se turmaSelecionada estiver vazia (""), retorna todas
-                    const matchTurma = !turmaSelecionada || item.turma?.includes($('#filtro-turma option:selected').text().trim());
 
+                    const matchTurma = !turmaSelecionada || item.turma?.includes($('#filtro-turma option:selected').text().trim());
                     const matchStatus = !statusSelecionado || item.status?.toLowerCase().trim() === statusSelecionado;
                     const matchMotivo = !motivoSelecionado || item.motivo?.toLowerCase().trim() === motivoSelecionado;
 
-                    // Filtro de datas
                     let matchData = true;
                     if (dataInicio || dataFim) {
-                        const itemData = parseDateDMY(item.data); // item.data deve estar no formato YYYY-MM-DD
+                        const itemData = parseDateDMY(item.data);
                         if (!itemData) return false;
                         if (dataInicio && itemData < dataInicio) matchData = false;
                         if (dataFim && itemData > dataFim) matchData = false;
@@ -405,28 +364,49 @@
                 });
 
                 tabela.clear().rows.add(filtrados).draw();
+            }
+
+            function salvarFiltros() {
+                const filtros = {
+                    turma: $('#filtro-turma').val(),
+                    status: $('#filtro-status').val(),
+                    motivo: $('#filtro-motivo').val(),
+                    dataInicio: $('#datepicker-popup input:first').val(),
+                    dataFim: $('#datepicker-popup input:last').val()
+                };
+
+                localStorage.setItem('filtrosAgendamentos', JSON.stringify(filtros));
+            }
+
+
+            $('#filtro-turma').on('change', function() {
+                salvarFiltros();
+                filtrarTabela();
             });
 
-        }        
-        // Modal de VISUALIZAÇÃO de Alunos
-        $('#listagem-agendamentos tbody').on('click', '.ver-alunos-link', function(e) {
-            e.preventDefault();
-            const ul = $("#lista-alunos-modal");
-            ul.empty();
-            const alunos = $(this).data('alunos');
-            const turmasAlunos = $(this).data('turmas-alunos');
+            $('#filtro-status').on('change', function() {
+                salvarFiltros();
+                filtrarTabela();
+            });
 
-            if (turmasAlunos) {
-                for (const nomeTurma in turmasAlunos) {
-                    ul.append(`<li class="list-group-item turma-header">${nomeTurma}</li>`);
-                    turmasAlunos[nomeTurma].forEach(nomeAluno => ul.append(`<li class="list-group-item aluno-item">${nomeAluno}</li>`));
-                }
-            } else if (alunos) {
-                alunos.forEach(nome => ul.append(`<li class="list-group-item">${nome}</li>`));
-            }
-            new bootstrap.Modal(document.getElementById("modal-ver-alunos")).show();
-        });
+            $('#filtro-motivo').on('change', function() {
+                salvarFiltros();
+                filtrarTabela();
+            });
 
+            $('#datepicker-popup').on('changeDate', function() {
+                salvarFiltros();
+                filtrarTabela();
+            });
+
+            $('#datepicker-popup input').on('keyup change', function() {
+                salvarFiltros();
+                filtrarTabela();
+            });
+        } 
+        
+        filtrarTabela();
+        
         // Modal de EXCLUSÃO de Agendamento
         $('#listagem-agendamentos').on('click', '.btn-excluir-agendamento', function() {
             const button = $(this);
@@ -449,10 +429,30 @@
             $('#edit_original_motivo').val(deleteInfo.motivo);
             $('#edit_turma_id').val(data.turmas || []).trigger('change');
 
-            // Aguarda o carregamento dos alunos
-            setTimeout(() => {
-                $('#edit_alunos_id').val(deleteInfo.aluno_ids || []).trigger('change');
-            }, 500);
+            const turmasSelecionadas = data.turmas || [];
+            const alunosSelect = $('#edit_alunos_id');
+
+            if (turmasSelecionadas.length > 0) {
+                fetch(`${getAlunosByTurmaUrl}?turmas=${turmasSelecionadas.join(',')}`)
+                    .then(res => {
+                        if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
+                        return res.json();
+                    })
+                    .then(alunos => {
+                        alunosSelect.empty();
+
+                        alunos.forEach(aluno => {
+                            const selected = (deleteInfo.aluno_ids || []).includes(aluno.matricula);
+                            const option = new Option(aluno.nome, aluno.matricula, selected, selected);
+                            alunosSelect.append(option);
+                        });
+
+                        alunosSelect.trigger('change');
+                    })
+                    .catch(err => {
+                        console.error('Erro ao carregar alunos:', err);
+                    });
+            }
 
             $('#edit_motivo').val(motivoMap[data.motivo] || deleteInfo.motivo);
             $('#edit_status').val(statusMap[data.status]);
@@ -483,22 +483,32 @@
                 width: '100%'
             });
             
-            if (flatpickrEditInstance) {
-                flatpickrEditInstance.destroy();
-            }
-            flatpickrEditInstance = flatpickr("#edit-datepicker", {
-                inline: true,
-                mode: "multiple",
-                dateFormat: "Y-m-d",
-                locale: "pt",
-                // minDate: "today",
-                minDate: minDateParaEditar,
-                defaultDate: datasParaSelecionar,
-                onChange: function(selectedDates, dateStr, instance) {
-                    const datas = selectedDates.map(d => instance.formatDate(d, "Y-m-d"));
-                    $('#edit_datas-hidden').val(datas.join(','));
-                }
+            // inicializa (ou reinicializa) o calendário
+            const $editCal = $('#edit-inline-datepicker');
+            $editCal.datepicker('destroy'); // limpa qualquer instância anterior
+
+            $editCal.datepicker({
+                format: 'yyyy-mm-dd',
+                todayHighlight: true,
+                multidate: true,
+                language: 'pt-BR',
+                startDate: minDateParaEditar // impede selecionar datas anteriores
+            }).on('changeDate', function(e) {
+                const datas = e.dates.map(date => {
+                    const y = date.getFullYear();
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const d = String(date.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${d}`;
+                });
+                $('#edit_datas-hidden').val(datas.join(','));
             });
+
+            // pré-seleciona as datas existentes
+            if (datasParaSelecionar.length > 0) {
+                const parsedDates = datasParaSelecionar.map(str => new Date(str));
+                $editCal.datepicker('setDates', parsedDates);
+                $('#edit_datas-hidden').val(datasParaSelecionar.join(','));
+            }
         });
 
         if (document.getElementById('form-cadastrar-agendamento')) {
@@ -554,19 +564,6 @@
 
                     // Atualiza o Select2
                     $('#alunos_id').val(todosAlunos).trigger('change');
-                }
-            });
-
-            // Inicialização de Plugins (Flatpickr)
-            flatpickr("#datepicker-container-cadastro", {
-                inline: true,
-                mode: "multiple",
-                dateFormat: "Y-m-d",
-                minDate: "today",
-                locale: "pt",
-                onChange: function(selectedDates, dateStr, instance) {
-                    const datas = selectedDates.map(d => instance.formatDate(d, "Y-m-d"));
-                    $('#datas-hidden').val(datas.join(','));
                 }
             });
             
@@ -649,7 +646,7 @@
             atualizarListaAlunosEdit();
         });
 
-        $(document).on('mouseover', '.flatpickr-day.flatpickr-disabled', function() {
+        $(document).on('mouseenter', '.datepicker-days td.day.disabled', function() {
             const el = this;
             let tooltipTitle = '';
             if ($(el).closest('#modal-editar-agendamento').length) {
@@ -665,9 +662,29 @@
                 customClass: 'tooltip-on-top'
             });
             tooltip.show();
+
+            // Ajuste automático de posição caso o calendário esteja no topo da tela
+            const tip = $(tooltip.tip);
+            const offset = $(el).offset();
+            const tipHeight = tip.outerHeight();
+            const scrollTop = $(window).scrollTop();
+
+            // Se o tooltip estiver saindo da tela, move para baixo
+            if (offset.top - tipHeight < scrollTop) {
+                tooltip.dispose();
+                const tooltipBottom = new bootstrap.Tooltip(el, {
+                    html: true,
+                    title: tooltipTitle,
+                    trigger: 'manual',
+                    container: 'body',
+                    placement: 'bottom',
+                    customClass: 'tooltip-on-top'
+                });
+                tooltipBottom.show();
+            }
         });
         
-        $(document).on('mouseout', '.flatpickr-day.flatpickr-disabled', function() {
+        $(document).on('mouseleave', '.datepicker-days td.day.disabled', function() {
             const el = this;
             const tooltip = bootstrap.Tooltip.getInstance(el);
             if (tooltip) {

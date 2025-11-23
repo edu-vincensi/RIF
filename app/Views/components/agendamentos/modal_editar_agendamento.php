@@ -15,7 +15,7 @@
 
                     <div class="mb-3">
                         <label for="edit_turma_id" class="form-label">Selecione a Turma(s)</label>
-                        <select id="edit_turma_id" name="turma_id[]" class="js-example-basic-multiple" multiple="multiple" style="width: 100%;">
+                        <select id="edit_turma_id" name="turma_id[]" class="js-example-basic-multiple" multiple="multiple" style="width: 100%;" required>
                             <?php foreach ($turmas as $turma): ?>
                                 <option value="<?= $turma['id'] ?>">
                                     <?= esc($turma['nome_turma'] . ' - ' . esc($turma['nome_curso'])) ?>
@@ -26,15 +26,15 @@
 
                     <div class="mb-3">
                         <label for="edit_alunos_id" class="form-label">Selecione os Alunos</label>
-                        <select id="edit_alunos_id" name="matriculas[]" class="js-example-basic-multiple" multiple="multiple" style="width:100%">
+                        <select id="edit_alunos_id" name="matriculas[]" class="js-example-basic-multiple" multiple="multiple" style="width:100%" required>
                             <!-- Opções serão carregadas dinamicamente via JS -->
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Data(s) do Agendamento</label>
-                        <div id="edit-datepicker"></div>
-                        <input type="hidden" name="datas[]" id="edit_datas-hidden">
+                        <div id="edit-inline-datepicker" class="datepicker"></div>
+                        <input type="hidden" id="edit_datas-hidden" name="datas[]">
                     </div>
 
                     <div class="row">

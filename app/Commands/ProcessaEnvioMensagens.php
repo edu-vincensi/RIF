@@ -11,6 +11,7 @@ use App\Models\ControleRefeicoesModel;
 use App\Models\TurmaModel;
 use App\Libraries\EvolutionAPI;
 use App\Helpers\QrCodeGenerator;
+use DateTime; 
 
 class ProcessaEnvioMensagens extends BaseCommand
 {
@@ -70,6 +71,8 @@ class ProcessaEnvioMensagens extends BaseCommand
                     $podeEnviar = true;
                 } elseif ($categoria == 1 && $difHoras <= 24 && $difHoras >= 0) {
                     $podeEnviar = true;
+                } elseif ($categoria == 2) { 
+                    $podeEnviar = true;
                 }
 
                 if (!$podeEnviar) {
@@ -94,12 +97,14 @@ class ProcessaEnvioMensagens extends BaseCommand
 
                     $nomeTurmaCurso = $turmaModel->getNomeTurmaComCurso($aluno['turma_id']);
 
-                    $conteudoQrCode = implode('|', [
-                        $alunoId,
-                        $aluno['nome'],
-                        $nomeTurmaCurso,
-                        $refeicao['data_refeicao'],
-                    ]);
+                    // $conteudoQrCode = implode('|', [
+                    //     $alunoId,
+                    //     $aluno['nome'],
+                    //     $nomeTurmaCurso,
+                    //     $refeicao['data_refeicao'],
+                    // ]);
+
+                    $conteudoQrCode = $refeicao['id'];
 
                     try {
 

@@ -422,6 +422,7 @@
     <script src="<?php echo base_url("assets/vendors/moment/moment.min.js"); ?>"></script>
     <script src="<?php echo base_url("assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"); ?>"></script>
     <script src="<?php echo base_url("assets/vendors/bootstrap-datepicker/datetime/bootstrap-datetimepicker.min.js"); ?>"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/locales/bootstrap-datepicker.pt-BR.min.js"></script>
 
     <script src="<?php echo base_url("assets/js/formpickers.js"); ?>"></script>
     <script src="<?php echo base_url("assets/js/off-canvas.js"); ?>"></script>

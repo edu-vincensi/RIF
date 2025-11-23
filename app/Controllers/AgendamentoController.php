@@ -215,9 +215,10 @@ class AgendamentoController extends BaseController
                         $nomeAluno = $aluno['nome'];
                         //$destinatario = $telefoneAluno['telefone'];
                         $destinatario = '69992809488'; 
+                        $data = (new \DateTime($dataRefeicao))->format('d/m/Y');
 
-                        $mensagem = "Prezado(o) {$nomeAluno}\n";
-                        $mensagem .= "Confirme sua refeição para o dia {$dataRefeicao}\n";
+                        $mensagem = "Prezado(a) {$nomeAluno}\n";
+                        $mensagem .= "Confirme sua refeição para o dia {$data}\n";
                         $mensagem .= "*Digite 1* para sim, irei utilizar o beneficio no dia informado\n";
                         $mensagem .= "*Digite 2* para não, não irei utilizar o beneficio no dia informado";
 

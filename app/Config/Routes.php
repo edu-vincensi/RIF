@@ -7,12 +7,14 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 
-$routes->get('/', 'Home::index'); 
+$routes->get('/', 'Home::index');
+
+//Deploy
+$routes->post('deploy', 'DeployController::index');
 
 $routes->get('/teste', 'Home::teste');
 
 service('auth')->routes($routes);
-
 
 // =================================================================================
 // GRUPO PRINCIPAL: Rotas Protegidas do Sistema (/sys)
@@ -66,10 +68,8 @@ $routes->group('sys', [], static function ($routes) {
         $routes->put('update', 'AlunoController::update');
         $routes->delete('delete', 'AlunoController::delete');
         $routes->post('import', 'AlunoController::import');
+        $routes->post('filter', 'AlunoController::filter');
         $routes->post('importProcess', 'AlunoController::importProcess');
-        
-        //provisorio
-        $routes->get('sendEmail', 'AlunoController::enviarEmail'); 
     });
 
     //==============================================================
@@ -98,15 +98,19 @@ $routes->group('sys', [], static function ($routes) {
     //==============================================================
     $routes->group('solicitacoes', ['filter' => 'app_group:aluno,solicitante,admin,developer'], static function ($routes) {
         $routes->get('', 'SolicitacaoRefeicoesController::index');
-        $routes->post('create', 'SolicitacaoRefeicoesController::create');
-        $routes->post('update', 'SolicitacaoRefeicoesController::update');
+        $routes->post('admin/create', 'SolicitacaoRefeicoesController::create');
+        $routes->get('admin/getAlunosByTurma', 'AgendamentoController::getAlunosByTurma');
+        $routes->post('admin/update', 'SolicitacaoRefeicoesController::update');
         $routes->post('delete', 'SolicitacaoRefeicoesController::delete');
     });
 
-    //==============================================================
+   //==============================================================
     // Rotas de Análise de solicitação - Acesso Restrito
     //==============================================================
-    $routes->get('analise', 'AnaliseSolicitacaoController::index', ['filter' => 'app_group:admin,developer']);
+    $routes->group('analise', ['filter' => 'app_group:admin,developer'], static function ($routes) {
+    $routes->get('', 'AnaliseSolicitacaoController::index');          // Lista solicitações
+    $routes->post('atualizar', 'AnaliseSolicitacaoController::atualizar'); // Atualiza status
+   });
 
     //==============================================================
     // Rotas de Restaurante - Acesso para 'restaurante'

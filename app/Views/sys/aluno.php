@@ -60,10 +60,6 @@
                                 <option value="Inativo">Inativo</option>
                             </select>
                         </div>
-
-                        <div class="col-md-2 text-start">
-                            <button type="button" id="btn-filtrar-alunos" class="btn btn-primary">Filtrar</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -383,9 +379,27 @@
                 (!status || rowStatus === status);
         });
 
-        $('#btn-filtrar-alunos').on('click', function() {
+        $('#filtro-curso, #filtro-turma, #filtro-status').on('change', function() {
             table.draw();
         });
+
+        $('#filtro-curso, #filtro-turma, #filtro-status').on('change', function() {
+            localStorage.setItem('filtroCurso', $('#filtro-curso').val());
+            localStorage.setItem('filtroTurma', $('#filtro-turma').val());
+            localStorage.setItem('filtroStatus', $('#filtro-status').val());
+            table.draw();
+        });
+
+        const curso = localStorage.getItem('filtroCurso');
+        const turma = localStorage.getItem('filtroTurma');
+        const status = localStorage.getItem('filtroStatus');
+
+        if (curso) $('#filtro-curso').val(curso).trigger('change');
+        if (turma) $('#filtro-turma').val(turma).trigger('change');
+        if (status) $('#filtro-status').val(status).trigger('change');
+
+        // Redesenha a tabela já com os filtros aplicados
+        table.draw();
 
         // Lógica de notificação
         <?php if (session()->has('erros')): ?>
