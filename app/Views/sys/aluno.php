@@ -4,7 +4,6 @@
 <?= $this->include('components/alunos/modal_importar_aluno', ['turmas' => $turmas]) ?>
 
 
-
 <div class="mb-3">
     <h2 class="card-title mb-0">Alunos</h2>
 </div>
@@ -39,7 +38,7 @@
                             <label for="filtro-curso">Curso</label>
                             <select id="filtro-curso" class="js-example-basic-single" style="width:100%">
                                 <option value="">--</option>
-                            </select>
+                                </select>
                         </div>
 
                         <div class="col-md-3">
@@ -79,7 +78,6 @@
                                 <th>Nome</th>
                                 <th>Turma</th>
                                 <th>Curso</th>
-                                <th>Email</th>
                                 <th>Telefone</th>
                                 <th>Status</th>
                                 <th style="text-align: center; width: 10%; min-width: 100px;">Ações</th>
@@ -125,7 +123,7 @@
 
     $(document).ready(function() {
 
-        //ESSA PARTE APENAS RENDERIZA O MODELO DO CORONA
+        // Inicializa o plugin Select2
         $('.js-example-basic-single').select2();
 
         
@@ -139,23 +137,8 @@
             $cursoSelect.append(`<option value="${curso}">${curso}</option>`); // Adiciona cada curso ao select
         });
 
-        // Objeto que contém os templates e a lógica para cada tipo de repetidor
+        // Objeto que contém os templates e a lógica para repetidores
         const repeaters = {
-            email: {
-                template: (value = '') => `
-                    <div class="email-repeater-item d-flex align-items-center mb-2">
-                        <div class="input-group me-2">
-                            <input type="email" class="form-control form-control-sm" name="email[]" placeholder="aluno@gmail.com" value="${value}" required>
-                        </div>
-                        <button type="button" class="btn btn-inverse-danger btn-sm icon-btn remove-email me-2" data-bs-toggle="tooltip" title="Remover Email">
-                            <i class="mdi mdi-delete"></i>
-                        </button>
-                        <button type="button" class="btn btn-inverse-info btn-sm icon-btn add-email" data-bs-toggle="tooltip" title="Adicionar Email">
-                            <i class="mdi mdi-plus"></i>
-                        </button>
-                    </div>`,
-                placeholder: 'É necessário ter pelo menos um e-mail.'
-            },
             telefone: {
                 template: (value = '') => `
                     <div class="telefone-repeater-item d-flex align-items-center mb-2">
@@ -199,12 +182,13 @@
         };
 
         const updateRepeaterButtons = container => {
-            const isSingleItem = container.find('.email-repeater-item, .telefone-repeater-item').length <= 1;
-            container.find('.remove-email, .remove-telefone').toggle(!isSingleItem);
+            // Verifica a contagem apenas para o item de telefone, que é o único repetidor
+            const isSingleItem = container.find('.telefone-repeater-item').length <= 1; 
+            container.find('.remove-telefone').toggle(!isSingleItem);
         };
 
         const handleAddButtonClick = function() {
-            const type = $(this).hasClass('add-email') ? 'email' : 'telefone';
+            const type = 'telefone';
             const container = $(this).closest('.card-body').find(`[id$="-repeater-container"]`);
             container.append(repeaters[type].template());
             updateRepeaterButtons(container);
@@ -212,7 +196,7 @@
         };
 
         const handleRemoveButtonClick = function() {
-            const type = $(this).hasClass('remove-email') ? 'email' : 'telefone';
+            const type = 'telefone';
             const container = $(this).closest('.card-body').find(`[id$="-repeater-container"]`);
             
             if (container.find(`.${type}-repeater-item`).length > 1) {
@@ -245,8 +229,7 @@
         $('#modal-cadastrar-aluno').on('show.bs.modal', function() {
             $(this).find('form')[0].reset();
             $('#curso').val('Selecione uma turma');
-            setupRepeater('#email-repeater-container', 'email');
-            setupRepeater('#telefone-repeater-container', 'telefone');
+            setupRepeater('#telefone-repeater-container', 'telefone'); 
             initTooltips();
         });
 
@@ -266,39 +249,27 @@
                     const cursoNome = modal.find(`#edit_turma_id option[value='${aluno.turma_id}']`).data('curso-nome');
                     modal.find('#edit_curso').val(cursoNome || 'Selecione uma turma');
                     
-                    setupRepeater('#edit-email-repeater-container', 'email', aluno.emails);
+                    // Apenas Telefone
                     setupRepeater('#edit-telefone-repeater-container', 'telefone', aluno.telefones);
                     initTooltips();
                 })
                 .catch(error => console.error('Erro ao buscar dados do aluno:', error));
         });
 
-        $(document).on('click', '.add-email, .add-telefone', handleAddButtonClick);
-        $(document).on('click', '.remove-email, .remove-telefone', handleRemoveButtonClick);
+        $(document).on('click', '.add-telefone', handleAddButtonClick);
+        $(document).on('click', '.remove-telefone', handleRemoveButtonClick);
         $(document).on('change', '#turma_id, #edit_turma_id', handleTurmaChange);
         $('#deletarModal').on('show.bs.modal', handleDeletarModalShow);
         
         // Inicialização do DataTables
-        const table = $('#tabela-alunos').DataTable({  //OBS: MUDEI A VÁRIAVEL PARA CONST
+        const table = $('#tabela-alunos').DataTable({ 
             data: alunosData,
             columns: [
                 { data: 'matricula' },
                 { data: 'nome' },
                 { data: 'turma_nome' },
                 { data: 'curso_nome' },
-                { 
-                    data: 'emails',
-                    render: function(data, type, row) {
-                        let html = '';
-                        if (Array.isArray(data) && data.length > 0) {
-                            html = data.map(email => `<small class="font-weight-bold">${email}</small>`).join('');
-                        } else {
-                            html = '<small class="font-weight-bold">Nenhum e-mail</small>';
-                        }
-                        return `<div class="d-flex flex-column">${html}</div>`;
-                    }
-                },
-                { 
+                { // Coluna Telefone (índice 4)
                     data: 'telefones',
                     render: function(data, type, row) {
                         let html = '';
@@ -310,13 +281,13 @@
                         return `<div class="d-flex flex-column">${html}</div>`;
                     }
                 },
-                {
+                { // Coluna Status (índice 5)
                     data: 'status',
                     render: function(data, type, row) {
                         return data == 1 ? 'Ativo' : 'Inativo';
                     }
                 },
-                {
+                { // Coluna Ações (índice 6)
                     data: null,
                     render: function(data, type, row) {
                         return `
@@ -365,22 +336,19 @@
         });
 
         // Filtro de DataTable
+        // Índices de coluna ajustados: Status é agora o índice 5.
         $.fn.dataTable.ext.search.push(function(settings, data) {
             const curso = $('#filtro-curso').val();
             const turma = $('#filtro-turma').val();
             const status = $('#filtro-status').val();
 
-            const rowCurso = data[3]; // coluna Curso
-            const rowTurma = data[2]; // coluna Turma
-            const rowStatus = data[6]; // coluna Status
+            const rowCurso = data[3]; // Coluna Curso
+            const rowTurma = data[2]; // Coluna Turma
+            const rowStatus = data[5]; // Coluna Status (AJUSTADO)
 
             return (!curso || rowCurso === curso) &&
                 (!turma || rowTurma === turma) &&
                 (!status || rowStatus === status);
-        });
-
-        $('#filtro-curso, #filtro-turma, #filtro-status').on('change', function() {
-            table.draw();
         });
 
         $('#filtro-curso, #filtro-turma, #filtro-status').on('change', function() {
@@ -389,7 +357,8 @@
             localStorage.setItem('filtroStatus', $('#filtro-status').val());
             table.draw();
         });
-
+        
+        // Recuperar e aplicar filtros
         const curso = localStorage.getItem('filtroCurso');
         const turma = localStorage.getItem('filtroTurma');
         const status = localStorage.getItem('filtroStatus');
@@ -401,7 +370,7 @@
         // Redesenha a tabela já com os filtros aplicados
         table.draw();
 
-        // Lógica de notificação
+        // Lógica de notificação (sem alteração)
         <?php if (session()->has('erros')): ?>
             <?php foreach (session('erros') as $erro): ?>
                 $.toast({
@@ -425,6 +394,7 @@
             });
         <?php endif; ?>
 
+        // Máscara de Telefone
         $(document).on('input', '.telefone-input', function () {
             let telefone = $(this).val().replace(/\D/g, '').slice(0, 11);
 
@@ -435,7 +405,7 @@
                 telefone = telefone.slice(0, 10) + '-' + telefone.slice(10);
 
             $(this).val(telefone);
-        });    
+        });    
 
     });
 </script>

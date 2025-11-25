@@ -10,16 +10,19 @@
             <div class="modal-body">
                 <form id="alunoForm" action="<?= site_url('sys/alunos/create') ?>" method="post">
                     <?= csrf_field() ?>
+
                     <div class="mb-3">
                         <label for="nome" class="form-label">Nome do Aluno</label>
                         <small class="text-danger"> *</small>
                         <input type="text" class="form-control" id="nome" name="nome" placeholder="Ex: João da Silva" required>
                     </div>
+
                     <div class="mb-3">
                         <label for="matricula" class="form-label">Matrícula</label>
                         <small class="text-danger"> *</small>
                         <input type="text" class="form-control" id="matricula" name="matricula" placeholder="Ex: 20230001" required>
                     </div>
+
                     <div class="mb-3">
                         <label for="turma_id" class="form-label">Turma</label>
                         <small class="text-danger"> *</small>
@@ -27,17 +30,21 @@
                             <option value="">Selecione uma turma</option>
                             <?php if (!empty($turmas)): ?>
                                 <?php foreach ($turmas as $turma): ?>
-                                    <option value="<?= $turma['id'] ?>" data-curso-id="<?= $turma['curso_id'] ?>" data-curso-nome="<?= $turma['curso_nome'] ?>">
+                                    <option value="<?= $turma['id'] ?>" 
+                                            data-curso-id="<?= $turma['curso_id'] ?>" 
+                                            data-curso-nome="<?= $turma['curso_nome'] ?>">
                                         <?= esc($turma['nome']) ?> - <?= esc($turma['curso_nome']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
                     </div>
+
                     <div class="mb-3">
                         <label for="curso" class="form-label">Curso</label>
                         <input type="text" class="form-control" id="curso" name="curso" disabled placeholder="Selecione uma turma antes">
                     </div>
+
                     <div class="mb-3">
                         <label for="status" class="form-label">Status</label>
                         <small class="text-danger"> *</small>
@@ -46,16 +53,15 @@
                             <option value="inativo">Inativo</option>
                         </select>
                     </div>
-                    <div class="card-body">
-                        <label for="emails" class="form-label">Email</label>
-                        <small class="text-danger"> *</small>
-                        <div id="email-repeater-container"></div>
-                    </div>
+
+                    <!-- REMOVIDO: bloco de EMAIL -->
+
                     <div class="card-body">
                         <label for="telefones" class="form-label">Telefone</label>
                         <small class="text-danger"> *</small>
                         <div id="telefone-repeater-container"></div>
                     </div>
+
                 </form>
             </div>
             <div class="modal-footer">
