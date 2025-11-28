@@ -12,10 +12,12 @@
                     <?= csrf_field() ?>
                     <input type="hidden" name="_method" value="PUT"> 
                     <input type="hidden" name="matricula" id="edit_matricula">
+
                     <div class="mb-3">
                         <label for="edit_nome" class="form-label">Nome do Aluno</label>
                         <input type="text" class="form-control" id="edit_nome" name="nome" placeholder="Ex: João da Silva" required>
                     </div>
+
                     <div class="mb-3">
                         <label for="edit_turma_id" class="form-label">Turma</label>
                         <select class="form-control" id="edit_turma_id" name="turma_id" required>
@@ -29,10 +31,12 @@
                             <?php endif; ?>
                         </select>
                     </div>
+
                     <div class="mb-3">
                         <label for="edit_curso" class="form-label">Curso</label>
                         <input type="text" class="form-control" id="edit_curso" name="curso" disabled placeholder="Selecione uma turma">
                     </div>
+
                     <div class="mb-3">
                         <label for="edit_status" class="form-label">Status</label>
                         <select class="form-control" id="edit_status" name="status" required>
@@ -40,14 +44,14 @@
                             <option value="inativo">Inativo</option>
                         </select>
                     </div>
-                    <div class="card-body">
-                        <label for="edit_emails" class="form-label">Email</label>
-                        <div id="edit-email-repeater-container"></div>
-                    </div>
+
+                    <!-- REMOVIDO: bloco de EMAIL -->
+
                     <div class="card-body">
                         <label for="edit_telefones" class="form-label">Telefone</label>
                         <div id="edit-telefone-repeater-container"></div>
                     </div>
+
                 </form>
             </div>
             <div class="modal-footer">
