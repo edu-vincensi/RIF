@@ -20,7 +20,7 @@
 
                     <div class="mb-3">
                         <label for="edit_turma_id" class="form-label">Turma</label>
-                        <select class="form-control" id="edit_turma_id" name="turma_id" required>
+                        <select class="form-control" id="edit_turma_id" name="turma_id">
                             <option value="">Selecione uma turma</option>
                             <?php if (!empty($turmas)): ?>
                                 <?php foreach ($turmas as $turma): ?>
